@@ -11,3 +11,12 @@ web-build/
 
 # macOS
 .DS_Store
+
+# Yarn
+*.yarn
+*.log
+*.lock
+yarn-error
+yarn-error.log
+yarn.log
+yarn.lock
