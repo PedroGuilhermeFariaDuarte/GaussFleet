@@ -10,9 +10,9 @@ export type NavigationProp = {
 }
 
 export interface IList {
-  id: Number,
-  email: String,
-  first_name: String,
-  last_name: String,
-  avatar: String
+  id: number,
+  email: string,
+  first_name: string,
+  last_name: string,
+  avatar: string
 }
