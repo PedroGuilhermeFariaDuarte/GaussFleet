@@ -2,16 +2,23 @@ import React, { useState, useEffect } from "react"
 import { Text } from "react-native";
 import * as Network from "expo-network"
 
+// Icons
+import { Ionicons } from '@expo/vector-icons';
+
 // Navigaion Props
 import { NavigationProp, IList } from "./types"
 
 // Styles
-import { Container, Content, Card } from "./styles"
+import {
+  Container, Content, Card, CardHeader,
+  CardAvatar,
+  CardLabel, ButtonCreate
+} from "./styles"
 
 // Services
 import axios from "../../services/axios"
 
-// Hanlders
+// Handlers
 import HandlerError from "../../utils/handlers/error";
 import HandlerSuccess from "../../utils/handlers/success";
 
@@ -31,6 +38,7 @@ const List: React.FC<NavigationProp> = ({ navigation }) => {
   useEffect(() => {
     async function handlerLoadData() {
       try {
+        // Rever o tempo de execução
         await handlerGetNetworkStatus()
 
         if (networkStatus) {
@@ -69,7 +77,7 @@ const List: React.FC<NavigationProp> = ({ navigation }) => {
                     if (oldList?.length > 0) {
                       return [ ...oldList, success.rows ]
                     } else {
-                      return [ success.rows.item(0) ]
+                      return [ success.rows.item(1) ]
                     }
                   })
                 }
@@ -89,7 +97,11 @@ const List: React.FC<NavigationProp> = ({ navigation }) => {
     const { isConnected } = await Network.getNetworkStateAsync()
     setNetworkStatus(isConnected)
   }
+
   return (<Container>
+    <ButtonCreate>
+      <Ionicons name="md-add" size={30} color="white" />
+    </ButtonCreate>
     <Content>
       {
         list.length <= 0
@@ -101,7 +113,15 @@ const List: React.FC<NavigationProp> = ({ navigation }) => {
           </>
           :
           list.map((item, index) => (
-            <Card key={index}><Text>{item.first_name}</Text></Card>
+            <Card key={index}>
+              <CardHeader>
+                <CardAvatar source={{ uri: item.avatar }} />
+                <CardLabel>
+                  <Text>{item.first_name}{" "}{item.last_name}</Text>
+                  <Text>{item.email}</Text>
+                </CardLabel>
+              </CardHeader>
+            </Card>
           ))
       }
     </Content>

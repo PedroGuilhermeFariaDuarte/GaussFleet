@@ -79,9 +79,21 @@ const SignIn: React.FC<NavigationProp> = ({ navigation }) => {
       }
 
       SQLite.transaction(tt => {
-        tt.executeSql(UserCreateStatement,
-          [ dataForm.email, dataForm.password, response.data.token ],
-          (transaction, succes) => navigation.navigate("List")
+        tt.executeSql(
+          UserReadStatement,
+          [ dataForm.email, dataForm.password ],
+          (transaction, success) => {
+            if (success?.rows?.length <= 0) {
+              SQLite.transaction(tt => {
+                tt.executeSql(UserCreateStatement,
+                  [ dataForm.email, dataForm.password, response?.data?.token ],
+                  (transaction, succes) => navigation.navigate("List")
+                )
+              })
+            } else {
+              navigation.navigate("List")
+            }
+          }
         )
       })
     } catch (error) {
