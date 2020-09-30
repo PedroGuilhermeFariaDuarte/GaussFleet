@@ -1,4 +1,3 @@
-import { min } from "react-native-reanimated"
 import * as Yup from "yup"
 
 export default Yup.object().shape({

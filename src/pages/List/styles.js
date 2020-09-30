@@ -6,14 +6,15 @@ import StyleGuide from '../../styles/guide'
 export const Container = styled.SafeAreaView`
   width:100%;
   height:100%;
-  background-color: ${StyleGuide.background.secundaryColor};
+  background-color: #fff;
   padding-top:${StyleGuide.padding.all};
+
   flex-flow:column;
   justify-content:flex-end;
   align-items:center;
 `
 
-export const Content = styled.ScrollView`
+export const Content = styled.View`
   width:100%;
   height:auto;
   padding: ${StyleGuide.padding.scrolling.all};
