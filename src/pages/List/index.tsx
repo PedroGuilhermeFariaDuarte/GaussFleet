@@ -8,12 +8,9 @@ import { Ionicons } from '@expo/vector-icons';
 // Navigaion Props
 import { NavigationProp, IList } from "./types"
 
-// Styles
-import {
-  Container, Content, Card, CardHeader,
-  CardAvatar,
-  CardLabel, ButtonCreate
-} from "./styles"
+// Components
+import ContainerScroll from "../../components/ContainerScroll"
+import Create from "../../components/Create"
 
 // Services
 import axios from "../../services/axios"
@@ -27,12 +24,22 @@ import SQLite from "../../database"
 
 // Databse Statements
 import ListCreateStatement from "../../database/statements/create/list"
-import ListReadAllStatement from "../../database/statements/read/list"
+import ListReadAllStatement, { ListReadEmailStatement } from "../../database/statements/read/list"
+
+// Styles
+import {
+  Container, Content, Card, CardHeader,
+  CardAvatar,
+  CardLabel, ButtonCreate
+} from "./styles"
+
+
 
 const List: React.FC<NavigationProp> = ({ navigation }) => {
 
   const [ list, setList ] = useState<Array<IList>>([])
   const [ networkStatus, setNetworkStatus ] = useState<boolean | undefined>(false)
+  const [ showNewPage, setShowNewPage ] = useState<boolean>(false)
   let numberPage: Number = 1
 
   useEffect(() => {
@@ -52,9 +59,9 @@ const List: React.FC<NavigationProp> = ({ navigation }) => {
           response.data.data.forEach((item: IList) => {
             SQLite.transaction(tt => {
               tt.executeSql(ListCreateStatement,
-                [ item.email, item.first_name, item.last_name, item.avatar ],
+                [ item?.email, item?.first_name, item?.last_name, item?.avatar ],
                 (transaction, success) => {
-                  if (success.insertId > 0) {
+                  if (success?.insertId > 0) {
                     setList(oldList => {
                       if (oldList?.length > 0) {
                         return [ ...oldList, item ]
@@ -73,11 +80,17 @@ const List: React.FC<NavigationProp> = ({ navigation }) => {
               [],
               (transaction, success) => {
                 if (success.rows.length > 0) {
+                  // @ts-ignore
                   setList(oldList => {
                     if (oldList?.length > 0) {
                       return [ ...oldList, success.rows ]
                     } else {
-                      return [ success.rows.item(1) ]
+                      let items: IList[] = []
+                      for (let i = 0; i <= success.rows.length; i++) {
+                        items.push(success.rows.item(i))
+                      }
+
+                      return [ ...items ]
                     }
                   })
                 }
@@ -91,38 +104,79 @@ const List: React.FC<NavigationProp> = ({ navigation }) => {
     }
 
     handlerLoadData()
-  }, [])
+  }, [ networkStatus ])
 
   async function handlerGetNetworkStatus() {
     const { isConnected } = await Network.getNetworkStateAsync()
     setNetworkStatus(isConnected)
   }
 
+  function handlerShowNewPage() {
+    setShowNewPage(old => !old)
+  }
+
+  function handlerSetCreateUser(dataForm: IList) {
+    try {
+      SQLite.transaction(tt => {
+        tt.executeSql(
+          ListReadEmailStatement,
+          [ dataForm.email ],
+          (transaction, success) => {
+            if (success?.rows?.length <= 0) {
+              SQLite.transaction(tt => {
+                tt.executeSql(ListCreateStatement,
+                  [ dataForm.email,
+                  dataForm.first_name,
+                  dataForm.last_name,
+                  dataForm.avatar ],
+                  (transaction, success) => {
+                    setList(olds => [ ...olds, dataForm ])
+                  }
+                )
+              })
+            } else {
+              HandlerError({
+                message: `Já existe um usuario com este e-mail: ${dataForm.email}`
+              })
+            }
+          }
+        )
+      })
+    } catch (error) {
+      HandlerError(error)
+    }
+  }
+
   return (<Container>
-    <ButtonCreate>
+    <ButtonCreate onPress={() => handlerShowNewPage()}>
       <Ionicons name="md-add" size={30} color="white" />
     </ButtonCreate>
     <Content>
+      <ContainerScroll>
+        {
+          list.length <= 0
+            ?
+            <>
+              <Card />
+              <Card />
+              <Card />
+            </>
+            :
+            list.map((item, index) => (
+              <Card key={index}>
+                <CardHeader>
+                  <CardAvatar source={{ uri: item?.avatar }} />
+                  <CardLabel>
+                    <Text>{item?.first_name}{" "}{item?.last_name}</Text>
+                    <Text>{item?.email}</Text>
+                  </CardLabel>
+                </CardHeader>
+              </Card>
+            ))
+        }
+      </ContainerScroll>
       {
-        list.length <= 0
-          ?
-          <>
-            <Card />
-            <Card />
-            <Card />
-          </>
-          :
-          list.map((item, index) => (
-            <Card key={index}>
-              <CardHeader>
-                <CardAvatar source={{ uri: item.avatar }} />
-                <CardLabel>
-                  <Text>{item.first_name}{" "}{item.last_name}</Text>
-                  <Text>{item.email}</Text>
-                </CardLabel>
-              </CardHeader>
-            </Card>
-          ))
+        showNewPage && (<Create callback={handlerSetCreateUser} />)
       }
     </Content>
   </Container>)

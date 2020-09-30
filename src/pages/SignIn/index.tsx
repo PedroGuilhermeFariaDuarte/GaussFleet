@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from "react"
-
 import * as Network from "expo-network"
+
+// Icons
 import { StatusBar } from 'expo-status-bar'
 import { AntDesign } from '@expo/vector-icons'
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -129,7 +130,7 @@ const SignIn: React.FC<NavigationProp> = ({ navigation }) => {
   return (<Container>
     <BackgroundImage>
       <Content>
-        <Title color="#fff">Sign<Title>In</Title></Title>
+        <Title color="#fff">Create<Title>User</Title></Title>
       </Content>
       <Content>
         <ContainerForm onSubmit={handlerSubmitForm} ref={formRef}>
