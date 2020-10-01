@@ -1,5 +1,6 @@
 import React, { useEffect } from "react"
 import { StatusBar } from 'expo-status-bar'
+import { deleteAsync, documentDirectory } from "expo-file-system";
 
 // Navigaion Props
 import { NavigationProp } from "./types"
@@ -28,10 +29,12 @@ const Home: React.FC<NavigationProp> = ({ navigation }) => {
   useEffect(() => {
     async function handlerInitializaeDatabase() {
       try {
-        SQLite.transaction(tt => {
-          tt.executeSql(UserStatment)
-          tt.executeSql(ListStatment)
-        }, error => HanlderError(error))
+        await deleteAsync(`${documentDirectory}/SQLite/gaussfleet`).then(() => {
+          SQLite.transaction(tt => {
+            tt.executeSql(UserStatment)
+            tt.executeSql(ListStatment)
+          }, error => HanlderError(error))
+        })
       } catch (error) {
         HanlderError(error)
       }

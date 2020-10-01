@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from "react"
-import * as Network from "expo-network"
+import { ActivityIndicator } from 'react-native'
 
 // Icons
 import { StatusBar } from 'expo-status-bar'
@@ -29,7 +29,7 @@ import axios from "../../services/axios"
 
 // Hanlders
 import HandlerError from "../../utils/handlers/error";
-import HandlerSuccess from "../../utils/handlers/success";
+import HanlderNetwork from "../../utils/handlers/network";
 
 // Database
 import SQLite from "../../database"
@@ -39,21 +39,16 @@ import UserReadStatement from "../../database/statements/read/user"
 import UserCreateStatement from "../../database/statements/create/user"
 
 const SignIn: React.FC<NavigationProp> = ({ navigation }) => {
-
-  const [ networkStatus, setNetworkStatus ] = useState<boolean | undefined>(false)
+  const [ networkStatus, setNetWorkStatus ] = useState<boolean | undefined>()
+  const [ showIndicator, setShowIndicator ] = useState<boolean | undefined>(false)
   const formRef = useRef()
 
-  useEffect(() => {
-    async function handlerGetNetworkStatus() {
-      const { isConnected } = await Network.getNetworkStateAsync()
-      setNetworkStatus(isConnected)
-    }
-
-    handlerGetNetworkStatus()
-  }, [])
+  useEffect(() => HanlderNetwork(setNetWorkStatus), [])
 
   async function handlerSubmitForm(dataForm: any) {
     try {
+      setShowIndicator(old => !old)
+
       await SchemaSignIn.validate(dataForm, {
         abortEarly: false
       })
@@ -67,6 +62,7 @@ const SignIn: React.FC<NavigationProp> = ({ navigation }) => {
       return
     } catch (error) {
       HandlerError(error, formRef)
+      setShowIndicator(old => !old)
     }
   }
 
@@ -99,6 +95,7 @@ const SignIn: React.FC<NavigationProp> = ({ navigation }) => {
       })
     } catch (error) {
       HandlerError(error)
+      setShowIndicator(old => !old)
     }
   }
 
@@ -107,15 +104,15 @@ const SignIn: React.FC<NavigationProp> = ({ navigation }) => {
       SQLite.transaction(tt => {
         tt.executeSql(
           UserReadStatement,
-          [ dataForm.email, dataForm.password ],
-          (transaction, success) => {
+          [ dataForm?.email, dataForm?.password ],
+          (_transaction, success) => {
             if (success?.rows?.length > 0) {
               navigation.navigate("List")
             } else {
               SQLite.transaction(tt => {
                 tt.executeSql(UserCreateStatement,
-                  [ dataForm.email, dataForm.password, "token" ],
-                  (transaction, succes) => navigation.navigate("List")
+                  [ dataForm?.email, dataForm?.password, "token" ],
+                  (_transaction, _success) => navigation.navigate("List")
                 )
               })
             }
@@ -124,6 +121,7 @@ const SignIn: React.FC<NavigationProp> = ({ navigation }) => {
       })
     } catch (error) {
       HandlerError(error)
+      setShowIndicator(old => !old)
     }
   }
 
@@ -138,7 +136,13 @@ const SignIn: React.FC<NavigationProp> = ({ navigation }) => {
             <Label>
               email
             </Label>
-            <Input type="text" name="email">
+            <Input
+              type="text"
+              name="email"
+              autoCapitalize="none"
+              keyboardType="email-address"
+              returnKeyType="next"
+            >
               <AntDesign name="user" size={24} color="black" />
             </Input>
           </ContainerInput>
@@ -146,14 +150,23 @@ const SignIn: React.FC<NavigationProp> = ({ navigation }) => {
             <Label>
               password
             </Label>
-            <Input type="password" name="password">
+            <Input
+              type="password"
+              name="password"
+              autoCapitalize="none"
+              secureTextEntry={true}
+              returnKeyType="done"
+            >
               <MaterialCommunityIcons name="textbox-password" size={24} color="black" />
             </Input>
           </ContainerInput>
           <Button
-            onPress={() => formRef.current.submitForm()}
+            onPress={() => formRef?.current.submitForm()}
           >
-            <Label active={true}>continue</Label>
+            {
+              showIndicator ? (<ActivityIndicator size="small" color="#FFF" animating={showIndicator} />) : (<Label active={true}>continue</Label>)
+            }
+
           </Button>
         </ContainerForm>
       </Content>

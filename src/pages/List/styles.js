@@ -7,7 +7,6 @@ export const Container = styled.SafeAreaView`
   width:100%;
   height:100%;
   background-color: #fff;
-  padding-top:${StyleGuide.padding.all};
 
   flex-flow:column;
   justify-content:flex-end;
@@ -16,15 +15,18 @@ export const Container = styled.SafeAreaView`
 
 export const Content = styled.View`
   width:100%;
-  height:auto;
-  padding: ${StyleGuide.padding.scrolling.all};
+  min-height:30%;
+  max-height:60%;
+
+  justify-content:center;
+  align-items:center;
 `
 
 export const Card = styled.View`
-  width:100%;
+  width:96.5%;
   height:100px;
   margin-bottom: ${StyleGuide.margin.bottom};
-  background-color: ${StyleGuide.background.primaryColor};
+  background-color: ${StyleGuide.background.secundaryColor};
   padding:15px 10px 10px ${StyleGuide.padding.all};
   border-radius:${StyleGuide.border.card.radius};
 
@@ -42,7 +44,7 @@ export const CardAvatar = styled.Image`
   width:60px;
   height:60px;
   border-radius:30px;
-  background-color:${StyleGuide.background.secundaryColor};
+  background-color:${StyleGuide.background.primaryColor};
 `
 
 export const CardLabel = styled.View`
