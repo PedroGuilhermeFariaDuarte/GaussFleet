@@ -18,7 +18,7 @@ import axios from "../../services/axios"
 
 // Handlers
 import HandlerError from "../../utils/handlers/error";
-import HandlerSuccess from "../../utils/handlers/success";
+// import HandlerSuccess from "../../utils/handlers/success";
 import HandlerNetwork from "../../utils/handlers/network";
 
 // Database
@@ -37,7 +37,7 @@ import {
 
 
 
-const List: React.FC<NavigationProp> = ({ navigation }) => {
+const List: React.FC<NavigationProp> = ({ navigation, route }) => {
 
   const [ list, setList ] = useState<IList[]>([])
   const [ networkStatus, setNetworkStatus ] = useState<boolean | undefined>()
@@ -47,19 +47,30 @@ const List: React.FC<NavigationProp> = ({ navigation }) => {
   let numberPage: Number = 1
 
   useEffect(() => {
+    const data: IList = route?.params?.data
+    if (data?.email) {
+      const userExist = list.find(item => item?.email === data?.email)
+      if (!userExist) {
+        setList(oldList => [ ...oldList, data ])
+      }
+    }
+  }, [ route ])
+
+  useEffect(() => {
     async function handlerLoadData() {
       try {
         setShowIndicator(old => !old)
         if (networkStatus) {
           const response = await axios.get(`/api/users?page=${numberPage}`)
 
-          if (!response || response?.data?.length > 0) {
+          if (!response || response?.data?.length <= 0) {
             HandlerError({ message: "Não foi possivel listar todos os usuários" })
             setShowIndicator(old => !old)
             return;
           }
 
           response.data.data.forEach((item: IList) => {
+
             SQLite.transaction(tt => {
               tt.executeSql(ListReadEmailStatement,
                 [ item?.email ],
@@ -83,31 +94,10 @@ const List: React.FC<NavigationProp> = ({ navigation }) => {
                 }
               )
             })
+
           })
         } else {
-          SQLite.transaction(tt => {
-            tt.executeSql(ListReadAllStatement,
-              [],
-              (_transaction, success) => {
-                if (success.rows.length > 0) {
-                  let items: IList[] = []
-                  for (let i = 0; i <= success.rows.length; i++) {
-                    items.push(success.rows.item(i))
-                  }
-
-                  // @ts-ignore
-                  setList(oldList => {
-                    if (oldList?.length > 0) {
-                      // @ts-ignore
-                      return [ ...oldList, items.filter(item => item?.email != oldList?.email) ]
-                    } else {
-                      return [ ...items ]
-                    }
-                  })
-                }
-              }
-            )
-          })
+          handlerLocalListAllUser()
         }
         setShowIndicator(old => !old)
       } catch (error) {
@@ -122,41 +112,39 @@ const List: React.FC<NavigationProp> = ({ navigation }) => {
   useEffect(() => HandlerNetwork(setNetworkStatus), [])
 
   function handlerShowNewPage() {
-    setShowNewPage(old => !old)
+    // setShowNewPage(old => !old)
+    navigation.navigate("Create")
   }
 
-  function handlerSetCreateUser(dataForm: IList) {
-    try {
-      SQLite.transaction(tt => {
-        tt.executeSql(
-          ListReadEmailStatement,
-          [ dataForm.email ],
-          (transaction, success) => {
-            if (success?.rows?.length <= 0) {
-              SQLite.transaction(tt => {
-                tt.executeSql(ListCreateStatement,
-                  [ dataForm.email,
-                  dataForm.first_name,
-                  dataForm.last_name,
-                  dataForm.avatar ],
-                  (transaction, success) => {
-                    HandlerSuccess(success, `${dataForm.email} cadastro com sucesso`)
-                    setList(olds => [ ...olds, dataForm ])
-                    handlerShowNewPage()
-                  }
-                )
-              })
-            } else {
-              HandlerError({
-                message: `Já existe um usuario com este e-mail: ${dataForm.email}`
+  function handlerLocalListAllUser() {
+    SQLite.transaction(tt => {
+      tt.executeSql(ListReadAllStatement,
+        [],
+        (_transaction, success) => {
+          if (success.rows.length > 0) {
+            let items: IList[] = []
+            for (let i = 0; i <= success.rows.length; i++) {
+              const row = success.rows.item(i)
+              if (row?.email?.trim() !== "") {
+                items.push(row)
+              }
+            }
+
+            if (items.length > 0) {
+              // @ts-ignore
+              setList(oldList => {
+                if (oldList?.length > 0) {
+                  // @ts-ignore
+                  return [ ...oldList, items.filter(item => item?.email !== oldList?.email) ]
+                } else {
+                  return items
+                }
               })
             }
           }
-        )
-      })
-    } catch (error) {
-      HandlerError(error)
-    }
+        }
+      )
+    })
   }
 
   return (<Container>
@@ -177,17 +165,21 @@ const List: React.FC<NavigationProp> = ({ navigation }) => {
               ?
               (<ActivityIndicator size="small" color="#D5D5D5" animating={showIndicator} />)
               :
-              list.map((item, index) => (
-                <Card key={index}>
-                  <CardHeader>
-                    <CardAvatar source={{ uri: item?.avatar }} />
-                    <CardLabel>
-                      <Text>{item?.first_name}{" "}{item?.last_name}</Text>
-                      <Text>{item?.email}</Text>
-                    </CardLabel>
-                  </CardHeader>
-                </Card>
-              ))
+              list.reverse().map((item, index) => {
+                if (item && item?.email !== "") {
+                  return (
+                    <Card key={index}>
+                      <CardHeader>
+                        <CardAvatar source={{ uri: item?.avatar }} />
+                        <CardLabel>
+                          <Text>{item?.first_name}{" "}{item?.last_name}</Text>
+                          <Text>{item?.email}</Text>
+                        </CardLabel>
+                      </CardHeader>
+                    </Card>
+                  )
+                }
+              })
           }
         </ContainerScroll>
         {
