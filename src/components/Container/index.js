@@ -4,7 +4,7 @@ import styled from "styled-components/native"
 import StyleGuide from "../../styles/guide"
 
 export default styled.ImageBackground.attrs({
-  source: require("../../assets/background/home/home.jpg"),
+  source: require("../../assets/background/home/home3.jpg"),
   resizeMode: 'cover'
 })`
   width:100%;

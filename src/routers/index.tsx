@@ -11,6 +11,7 @@ import StackScreen from "../config/screen"
 import Home from "../pages/Home"
 import SignIn from "../pages/SignIn"
 import List from "../pages/List"
+import Create from "../components/Create"
 
 function Router() {
   const Stack = createStackNavigator<ScreensTypes>()
@@ -23,6 +24,7 @@ function Router() {
       <Stack.Screen name="Home" component={Home} />
       <Stack.Screen name="SignIn" component={SignIn} />
       <Stack.Screen name="List" component={List} />
+      <Stack.Screen name="Create" component={Create} />
     </Stack.Navigator>
   </NavigationContainer>
 }

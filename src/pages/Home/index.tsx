@@ -29,12 +29,13 @@ const Home: React.FC<NavigationProp> = ({ navigation }) => {
   useEffect(() => {
     async function handlerInitializaeDatabase() {
       try {
-        await deleteAsync(`${documentDirectory}/SQLite/gaussfleet`).then(() => {
-          SQLite.transaction(tt => {
-            tt.executeSql(UserStatment)
-            tt.executeSql(ListStatment)
-          }, error => HanlderError(error))
-        })
+        // DEBUG - Limpa o banco de dados gaussfleet
+        // await deleteAsync(`${documentDirectory}/SQLite/gaussfleet`).then(() => {
+        SQLite.transaction(tt => {
+          tt.executeSql(UserStatment)
+          tt.executeSql(ListStatment)
+        }, error => HanlderError(error))
+        // })
       } catch (error) {
         HanlderError(error)
       }

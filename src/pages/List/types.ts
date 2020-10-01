@@ -1,11 +1,12 @@
 import { FunctionComponent } from "react"
-import { StackNavigationProp, } from "@react-navigation/stack"
+import { StackNavigationProp } from "@react-navigation/stack"
 
 // Type Router
 import { ScreensTypes } from "../../config/screen/types/screens";
 
 export type NavigationProp = {
-  navigation: StackNavigationProp<ScreensTypes, 'List'>
+  navigation: StackNavigationProp<ScreensTypes, 'List'>,
+  route: StackNavigationProp<ScreensTypes, 'List'>,
   props: FunctionComponent
 }
 
